@@ -1,14 +1,12 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using FirebaseAdmin.Messaging;
+using Newtonsoft.Json;
 
-/// <summary>
-///     Class description.
-/// </summary>
 public class FcmNotificationBuilder
 {
-    private readonly Payload _notification = new();
+    private readonly Message _notification = new Message();
+    private Dictionary<string, string> _data = new Dictionary<string, string>();
 
-    // TODO: this should probably be handled by NotificationBuilder - which enum val should be used?
     public static FcmNotificationBuilder Create()
     {
         return new FcmNotificationBuilder();
@@ -21,77 +19,70 @@ public class FcmNotificationBuilder
 
     private void SetAndroidChannelId(string channelId)
     {
-        _notification.Data.AndroidChannelId = channelId;
+        _data.Add("android_channel_id", channelId);
     }
 
-    public override NotificationBuilder AddContent(NotificationContent content)
+    public FcmNotificationBuilder AddContent(NotificationContent content)
     {
-        _notification.Data.Content = JsonSerializer.Serialize(content, _jsonSerializerOptions);
-
+        _data.Add("content", JsonConvert.SerializeObject(content));
         SetContentAvailable(true);
 
         return this;
     }
 
-    public override NotificationBuilder SetNotificationText(string title, string body)
+    // this does not seem to be displayed when using SDK but it seems not to be important
+    public FcmNotificationBuilder SetNotificationText(string title, string body)
     {
         if (!string.IsNullOrWhiteSpace(title))
-            _notification.Notification.Title = title;
+            _data.Add("title", title);
 
         if (!string.IsNullOrWhiteSpace(body))
-            _notification.Notification.Body = body;
+            _data.Add("body", body);
 
         return this;
     }
 
     private void SetContentAvailable(bool contentAvailable)
     {
-        _notification.Data.ContentAvailable = contentAvailable ? "1" : "0";
+        _data.Add("contentAvailable", contentAvailable ? "1" : "0");
     }
 
-    public override NotificationBuilder SetTag(int notificationId)
+    public FcmNotificationBuilder SetTag(int notificationId)
     {
-        _notification.Notification.Tag = notificationId.ToString();
+        _data.Add("tag", notificationId.ToString());
         return this;
     }
 
-    public override Notification Build()
+    public FcmNotificationBuilder AddToken(string deviceToken)
     {
-        var serializedPayload = JsonSerializer.Serialize(_notification, _jsonSerializerOptions);
-        var notification = new FcmNotification(serializedPayload);
-        return notification;
+        _notification.Token = deviceToken;
+        return this;
     }
 
-    private class Payload
+    public Message Build()
     {
-        [JsonPropertyName("data")]
-        public PayloadData Data { get; } = new();
+        _notification.Data = _data;
+        return _notification;
+    }
 
-        public PayloadNotification Notification { get; } = new();
+    public class NotificationContent
+    {
+        [JsonPropertyName("accRef")]
+        public string? accRef { get; set; }
 
-        public class PayloadNotification
-        {
-            [JsonPropertyName("tag")]
-            public string Tag { get; set; }
+        [JsonPropertyName("eventName")]
+        public string? eventName { get; set; }
 
-            [JsonPropertyName("title")]
-            public string Title { get; set; }
+        [JsonPropertyName("payload")]
+        public PayloadContent? payload { get; set; }
 
-            [JsonPropertyName("body")]
-            public string Body { get; set; }
-        }
+        [JsonPropertyName("sentAt")]
+        public string? sentAt { get; set; }
+    }
 
-        public class PayloadData
-        {
-            [JsonPropertyName("android_channel_id")]
-            public string AndroidChannelId { get; set; }
-
-            [JsonPropertyName("content-available")]
-            public string ContentAvailable { get; set; }
-
-            [JsonPropertyName("content")]
-            public string Content { get; set; }
-        }
+    public class PayloadContent
+    {
+        [JsonPropertyName("someProperty")]
+        public string? someProperty { get; set; }
     }
 }
-
