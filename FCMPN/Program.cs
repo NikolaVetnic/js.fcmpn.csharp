@@ -26,7 +26,7 @@ public class Program
             eventName = "dynamic",
             payload = new
             {
-                someProperty = "someValue"
+                someProperty = "123someValue"
             },
             sentAt = "2021-01-01T00:00:00.000Z",
         };
