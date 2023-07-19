@@ -1,8 +1,9 @@
-﻿using Newtonsoft.Json;
-using FirebaseAdmin;
+﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using FirebaseAdmin.Messaging;
 using Microsoft.Extensions.Configuration;
+
+using static FcmNotificationBuilder;
 
 public class Program
 {
@@ -12,37 +13,43 @@ public class Program
         builder.AddUserSecrets<Program>();
         var config = builder.Build();
 
-        var deviceToken = config["DeviceToken"];
         var accRef = config["AccRef"];
+        var deviceToken = config["DeviceToken"];
 
         FirebaseApp.Create(new AppOptions()
         {
             Credential = GoogleCredential.FromFile("/Users/nikolavetnic/Documents/Texts/j&s-soft/aduwuvovud.json"),
         });
 
-        var content = new
-        {
-            accRef = accRef,
-            eventName = "dynamic",
-            payload = new
+        string rndString = RandomString(10);
+
+        var builtNotification = FcmNotificationBuilder
+            .Create()
+            .SetTag(1)
+            .SetNotificationText("My Notification Title", "Notification content.")
+            .AddContent(new NotificationContent()
             {
-                someProperty = "123someValue"
-            },
-            sentAt = "2021-01-01T00:00:00.000Z",
-        };
+                accRef = accRef,
+                eventName = "dynamic",
+                payload = new PayloadContent
+                {
+                    someProperty = rndString
+                },
+                sentAt = "2021-01-01T00:00:00.000Z",
+            })
+            .AddToken(deviceToken)
+            .Build();
 
-        var serializedContent = JsonConvert.SerializeObject(content);
+        var response = await FirebaseMessaging.DefaultInstance.SendAsync(builtNotification);
+        Console.WriteLine("Successfully sent " + rndString + " as Payload.SomeProperty: " + response);
+    }
 
-        var message = new Message()
-        {
-            Data = new Dictionary<string, string>()
-            {
-                { "content", serializedContent },
-            },
-            Token = deviceToken,
-        };
+    private static Random random = new Random();
 
-        var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
-        Console.WriteLine("Successfully sent message: " + response);
+    public static string RandomString(int length)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        return new string(Enumerable.Repeat(chars, length)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
     }
 }
