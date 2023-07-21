@@ -33,11 +33,11 @@ public class FcmNotificationBuilder
     // this does not seem to be displayed when using SDK but it seems not to be important
     public FcmNotificationBuilder SetNotificationText(string title, string body)
     {
-        if (!string.IsNullOrWhiteSpace(title))
-            _data.Add("title", title);
-
-        if (!string.IsNullOrWhiteSpace(body))
-            _data.Add("body", body);
+        _notification.Notification = new Notification()
+        {
+            Title = title,
+            Body = body
+        };
 
         return this;
     }
