@@ -25,11 +25,8 @@ public class FcmNotificationBuilderTest
         Assert.True(message.Data.ContainsKey("content"));
         Assert.Equal(JsonConvert.SerializeObject(content), message.Data["content"]);
 
-        Assert.True(message.Data.ContainsKey("title"));
-        Assert.Equal("title", message.Data["title"]);
-
-        Assert.True(message.Data.ContainsKey("body"));
-        Assert.Equal("body", message.Data["body"]);
+        Assert.Equal("title", message.Notification.Title);
+        Assert.Equal("body", message.Notification.Body);
 
         Assert.True(message.Data.ContainsKey("tag"));
         Assert.Equal("1", message.Data["tag"]);
