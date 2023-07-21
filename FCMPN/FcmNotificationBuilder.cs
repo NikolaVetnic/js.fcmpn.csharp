@@ -30,7 +30,6 @@ public class FcmNotificationBuilder
         return this;
     }
 
-    // this does not seem to be displayed when using SDK but it seems not to be important
     public FcmNotificationBuilder SetNotificationText(string title, string body)
     {
         _notification.Notification = new Notification()
